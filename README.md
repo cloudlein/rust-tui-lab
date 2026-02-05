@@ -53,7 +53,12 @@ Project Structure
     - `cargo run --bin binary_name`
 
 - `docs/`
-  - `docs/exercises.md`: full exercise descriptions (all levels).
+  - `docs/exercises.md`: overview and links to all levels.
+  - `docs/level1_basic_tui.md`: detailed exercises for Level 1.
+  - `docs/level2_layout_panels.md`: detailed exercises for Level 2.
+  - `docs/level3_stateful_widgets.md`: detailed exercises for Level 3.
+  - `docs/level4_multi_state.md`: detailed exercises for Level 4.
+  - `docs/level5_mini_projects.md`: detailed exercises for Level 5.
 
 
 How to Run in General
@@ -121,8 +126,15 @@ Where to Find the Exercises
 
 - High‑level overview and project structure:
   - This `README.md`.
-- Full exercise descriptions (all levels):
-  - `docs/exercises.md`
+- Full exercise descriptions:
+  - All levels combined:
+    - `docs/exercises.md`
+  - Per level:
+    - `docs/level1_basic_tui.md`
+    - `docs/level2_layout_panels.md`
+    - `docs/level3_stateful_widgets.md`
+    - `docs/level4_multi_state.md`
+    - `docs/level5_mini_projects.md`
 
 A good way to work is:
 
