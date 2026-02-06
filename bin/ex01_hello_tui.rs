@@ -6,6 +6,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScree
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::text::{Line, Span};
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -29,7 +30,13 @@ fn main() -> Result<()> {
             let frame = f.area();
 
             // Create a paragraph widget
-            let paragraph = Paragraph::new("Press q to quit")
+
+            let text = vec![
+                Line::from("Muhammad Salahudin Al Ayyubi"),
+                Line::from("I want to make tools with rust"),
+            ];
+
+            let paragraph = Paragraph::new(text)
                 .block(Block::default().borders(Borders::ALL).title("Hello TUI"));
 
             // Render the widget
@@ -41,6 +48,8 @@ fn main() -> Result<()> {
         if event::poll(std::time::Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
                 if key.code == KeyCode::Char('q') {
+                    break;
+                }else if key.code == KeyCode::Esc {
                     break;
                 }
             }
