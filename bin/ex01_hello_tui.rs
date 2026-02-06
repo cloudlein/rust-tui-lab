@@ -21,19 +21,23 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // wait for input
+    // draw loop
     loop {
 
         terminal.draw(|f| {
+           //  Define area to draw in (full screen here)
             let frame = f.area();
 
+            // Create a paragraph widget
             let paragraph = Paragraph::new("Press q to quit")
                 .block(Block::default().borders(Borders::ALL).title("Hello TUI"));
 
+            // Render the widget
             f.render_widget(paragraph, frame)
 
         })?;
 
+        // wait for input
         if event::poll(std::time::Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
                 if key.code == KeyCode::Char('q') {
