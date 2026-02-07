@@ -16,4 +16,4 @@ strip = true
 
 [[bin]]
 name = "ex01_hello_tui"
-path = "bin/ex01_hello_tui.rs"
+path = "src/bin/ex01_hello_tui.rs"
