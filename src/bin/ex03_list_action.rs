@@ -1,20 +1,21 @@
-use std::io;
 use color_eyre::Result;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
-use crossterm::{event, execute};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::{event, execute};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::Modifier;
 use ratatui::style::{Color, Style};
-use ratatui::Terminal;
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState};
+use ratatui::Terminal;
+use std::io;
+use ratatui::text::Line;
 
 struct StateFullList {
     state: ListState,
     items: Vec<String>,
-    current_selection: Vec<String>,
-    last_confirmed: Vec<String>,
+    current_selection: usize,
+    last_confirmed: Option<String>,
 }
 
 impl StateFullList {
@@ -30,7 +31,10 @@ impl StateFullList {
         let mut state = ListState::default();
         state.select(Some(0));
 
-        Self { state, items }
+        let mut current_selection = 0;
+        let last_confirmed = None;
+
+        Self { state, items, current_selection, last_confirmed }
     }
 
 
@@ -68,6 +72,14 @@ impl StateFullList {
 
         self.state.select(Some(i));
     }
+
+    fn selected_items(&mut self) {
+        if let Some(i) = self.state.selected() {
+            let item = &self.items[i];
+            self.last_confirmed = Some(item.clone());
+        }
+    }
+
 }
 
 fn main() -> Result<()> {
@@ -89,6 +101,14 @@ fn main() -> Result<()> {
         terminal.draw(|f| {
 
             let frame = f.area();
+
+            let current = &state.state.selected();
+            let last_confirmed = &state.last_confirmed;
+
+
+            let info_text = vec![
+                Line::from(format!("Current selection: {}", current))
+            ]
 
             // make full screen
             let vertical_layout = Layout::default()
