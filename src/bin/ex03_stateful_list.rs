@@ -19,10 +19,10 @@ impl StateFullList {
 
     fn new() -> Self {
         let items = vec![
-            "Item1".to_string(),
-            "Item2".to_string(),
-            "Item3".to_string(),
-            "Item4".to_string(),
+            "Item 1".to_string(),
+            "Item 2".to_string(),
+            "Item 3".to_string(),
+            "Item 4".to_string(),
         ];
 
         let mut state = ListState::default();
