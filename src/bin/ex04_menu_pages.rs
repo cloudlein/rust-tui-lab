@@ -6,15 +6,17 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::widgets::{Block, Borders, Padding, Paragraph, Wrap};
 use ratatui::Terminal;
 use std::io;
 
+#[derive(PartialEq, Eq, Clone, Copy)]
 enum Page {
     Home,
     Help,
     About,
 }
+
 struct AppPage {
     current_page: Page,
 }
@@ -82,25 +84,13 @@ fn main() -> Result<()> {
                 ).alignment(Alignment::Center),
                 Line::from(""),
                 Line::from(
-                    Span::styled(
-                        "Home",
-                        Style::default()
-                            .fg(Color::White)
-                    )
+                    Span::styled("Home", menu_style(Page::Home, app_page.current_page))
                 ).alignment(Alignment::Center),
                 Line::from(
-                    Span::styled(
-                        "Help",
-                        Style::default()
-                            .fg(Color::White)
-                    )
+                    Span::styled("Help", menu_style(Page::Help, app_page.current_page))
                 ).alignment(Alignment::Center),
                 Line::from(
-                    Span::styled(
-                        "About",
-                        Style::default()
-                            .fg(Color::White)
-                    )
+                    Span::styled("About", menu_style(Page::About, app_page.current_page))
                 ).alignment(Alignment::Center),
                 Line::from(""),
             ];
@@ -177,9 +167,11 @@ fn main() -> Result<()> {
 
 
             let content_panel = Paragraph::new(content_lines)
+                .wrap(Wrap { trim: true })
                 .block(
                     Block::default()
-                        .borders(Borders::ALL),
+                        .borders(Borders::ALL)
+                        .padding(Padding::new(4,4,0,0))
                 );
 
 
@@ -214,4 +206,15 @@ fn main() -> Result<()> {
 
     Ok(())
 
+}
+
+fn menu_style(page: Page, current: Page) -> Style {
+    if page == current {
+        Style::default()
+            .fg(Color::Black)
+            .bg(Color::White)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::White)
+    }
 }
