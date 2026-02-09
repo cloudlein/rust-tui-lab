@@ -6,17 +6,17 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::prelude::Modifier;
 use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Borders, List, ListItem, ListState};
+use ratatui::text::Line;
+use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 use ratatui::Terminal;
 use std::io;
-use ratatui::text::Line;
 
 struct StateFullList {
     state: ListState,
     items: Vec<String>,
-    current_selection: usize,
     last_confirmed: Option<String>,
 }
+
 
 impl StateFullList {
 
@@ -30,11 +30,10 @@ impl StateFullList {
 
         let mut state = ListState::default();
         state.select(Some(0));
-
-        let mut current_selection = 0;
         let last_confirmed = None;
 
-        Self { state, items, current_selection, last_confirmed }
+        Self { state, items, last_confirmed }
+
     }
 
 
@@ -102,13 +101,20 @@ fn main() -> Result<()> {
 
             let frame = f.area();
 
-            let current = &state.state.selected();
-            let last_confirmed = &state.last_confirmed;
+            let current = state.state
+                .selected()
+                .and_then(|i| state.items.get(i))
+                .map(String::as_str)
+                .unwrap_or("None");
+
+            let last = state.last_confirmed.as_deref().unwrap_or("None");
+
 
 
             let info_text = vec![
-                Line::from(format!("Current selection: {}", current))
-            ]
+                Line::from(format!("Current selection: {}", current)),
+                Line::from(format!("Last confirmed: {}", last)),
+            ];
 
             // make full screen
             let vertical_layout = Layout::default()
@@ -144,16 +150,16 @@ fn main() -> Result<()> {
                 // symbol for selected item
                 .highlight_symbol(">> ");
 
-            let info_panel =
-            Block::default()
-            .borders(Borders::ALL)
-            .title("Info Panel")
-            .style(Style::default().fg(Color::White));
+            let info_panel = Paragraph::new(info_text)
+                .block(Block::default()
+                           .borders(Borders::ALL)
+                           .title("Info Panel")
+                           .style(Style::default().fg(Color::White).bg(Color::Black)
+                           ));
 
-
-                // render with render stateful widget so list state available to read
+            // render with render stateful widget so list state available to read
             f.render_stateful_widget(list, vertical_layout[0], &mut state.state);
-                 f.render_widget(info_panel, vertical_layout[1]);
+            f.render_widget(info_panel, vertical_layout[1]);
 
         })?;
 
@@ -164,6 +170,7 @@ fn main() -> Result<()> {
                     KeyCode::Char('q') | KeyCode::Esc => break,
                     KeyCode::Up => state.previous(),
                     KeyCode::Down => state.next(),
+                    KeyCode::Enter => state.selected_items(),
                     _ => {}
                 }
             }
