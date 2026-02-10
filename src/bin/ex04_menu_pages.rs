@@ -171,7 +171,7 @@ fn main() -> Result<()> {
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
-                        .padding(Padding::new(4,4,0,0))
+                        .padding(Padding::new(4,4,0,4))
                 );
 
 
