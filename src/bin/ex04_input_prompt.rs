@@ -34,11 +34,24 @@ impl App {
         }
     }
 
+
     fn move_cursor_left(&mut self) {
         let cursor_moved_left = self.character_index.saturating_sub(1);
         self.character_index = self.clamp_cursor(cursor_moved_left);
     }
 
+    fn move_cursor_right(&mut self) {
+        let cursor_moved_right = self.character_index.saturating_add(1);
+        self.character_index = self.clamp_cursor(cursor_moved_right);
+    }
+
+    fn enter_char (&mut self, new_char: char) {
+        let index = self.by
+    }
+
+    fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
+        new_cursor_pos.clamp(0, self.character_index)
+    }
     
 }
 
@@ -154,3 +167,4 @@ fn default_title_text_style() -> Style {
     .fg(Color::White)
         .add_modifier(Modifier::BOLD)
 }
+
