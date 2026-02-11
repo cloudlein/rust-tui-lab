@@ -46,7 +46,40 @@ impl App {
     }
 
     fn enter_char (&mut self, new_char: char) {
-        let index = self.by
+        let index = self.byte_index();
+        self.input.insert(index, new_char);
+        self.move_cursor_right();
+    }
+
+    fn byte_index(&self) -> usize {
+        self.input
+            .char_indices()
+            .map(|(i, _)| i)
+            .nth(self.character_index)
+            .unwrap_or(self.input.len())
+    }
+
+    fn delete_char(&mut self) {
+        let is_not_cursor_leftmost = self.character_index != 0;
+        if is_not_cursor_leftmost {
+            let current_index = self.character_index;
+            let from_left_to_current_index = current_index - 1;
+
+            let before_char_to_delete = self.input.chars().take(from_left_to_current_index);
+            let after_char_to_delete = self.input.chars().skip(current_index);
+
+            self.input = before_char_to_delete.chain(after_char_to_delete).collect();
+            self.move_cursor_left();
+        }
+    }
+
+    fn rest_cursor(&mut self){
+        self.character_index = 0;
+    }
+
+    fn submit_input(&mut self) {
+        self.input.clear();
+        self.rest_cursor();
     }
 
     fn clamp_cursor(&self, new_cursor_pos: usize) -> usize {
@@ -67,6 +100,7 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    let mut app = App::new();
 
     loop {
         terminal.draw(| f| {
@@ -138,11 +172,26 @@ fn main() -> Result<()> {
         })?;
 
         if let Event::Key(key) = event::read()? {
-            if key.kind == KeyEventKind::Press {
-                match key.code {
-                    KeyCode::Char('q') => break,
+            match app.input_mode {
+                InputMode::Normal => match key.code {
+                    KeyCode::Char('i') => {
+                        app.input_mode = InputMode::Editing;
+                    }
+                    KeyCode::Char('q') => {
+                        break;
+                    }
                     _ => {}
-                }
+                },
+                InputMode::Editing if key.kind == KeyEventKind::Press => match key.code {
+                    KeyCode::Enter => app.submit_input(),
+                    KeyCode::Char(to_insert) => app.enter_char(to_insert),
+                    KeyCode::Backspace => app.delete_char(),
+                    KeyCode::Left => app.move_cursor_left(),
+                    KeyCode::Right => app.move_cursor_right(),
+                    KeyCode::Esc => app.input_mode = InputMode::Normal,
+                    _ => {}
+                },
+                InputMode::Editing => {}
             }
         }
     }
