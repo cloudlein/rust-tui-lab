@@ -10,6 +10,39 @@ use ratatui::text::{Line, Span};
 use ratatui::Terminal;
 use ratatui::widgets::{Block, Borders, Padding, Paragraph};
 
+
+struct App {
+    input: String,
+    character_index: usize,
+    input_mode: InputMode,
+    message: Vec<String>,
+}
+
+enum InputMode {
+    Normal,
+    Editing
+}
+
+impl App {
+
+   const fn new() -> Self {
+        Self {
+            input: String::new(),
+            input_mode: InputMode::Normal,
+            message: Vec::new(),
+            character_index: 0,
+        }
+    }
+
+    fn move_cursor_left(&mut self) {
+        let cursor_moved_left = self.character_index.saturating_sub(1);
+        self.character_index = self.clamp_cursor(cursor_moved_left);
+    }
+
+    
+}
+
+
 fn main() -> Result<()> {
     color_eyre::install()?;
 
@@ -29,8 +62,8 @@ fn main() -> Result<()> {
             let vertical_layout = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
+                    Constraint::Length(7),
                     Constraint::Length(3),
-                    Constraint::Length(2),
                     Constraint::Length(3),
                 ])
                 .split(frame);
@@ -73,9 +106,17 @@ fn main() -> Result<()> {
                         .padding(Padding::new(4, 4, 0, 0))
                 );
 
-            let input_panel = Paragraph::new(input_text);
+            let input_panel = Paragraph::new(input_text)
+                .block(
+                    Block::default()
+                    .borders(Borders::ALL)
+                );
 
-            let submit_panel = Paragraph::new(submit_text);
+            let submit_panel = Paragraph::new(submit_text)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+            );;
 
             f.render_widget(header_panel, vertical_layout[0]);
             f.render_widget(input_panel, vertical_layout[1]);
