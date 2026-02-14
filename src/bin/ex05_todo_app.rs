@@ -1,15 +1,15 @@
+use chrono::{Duration, Local};
 use color_eyre::Result;
-use crossterm::{event, execute};
+use crossterm::event::{Event, KeyCode, KeyEventKind};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::{event, execute};
 use ratatui::backend::CrosstermBackend;
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
+use ratatui::widgets::{Block, Borders, Padding, Paragraph};
 use ratatui::{Frame, Terminal};
 use std::io;
-use chrono::{Duration, Local};
-use crossterm::event::{Event, KeyCode, KeyEventKind};
-use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::widgets::{Block, Borders, Padding, Paragraph};
 
 enum Page{
     Day,
@@ -38,10 +38,10 @@ impl App {
         let vertical_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(4),
-                Constraint::Min(3),
-                Constraint::Length(2),
-                Constraint::Length(2),
+                Constraint::Length(4),   // header
+                Constraint::Min(0),      // content
+                Constraint::Length(3),   // action
+                Constraint::Length(3),   // footer
             ])
             .split(container);
 
@@ -70,21 +70,62 @@ impl App {
         ];
 
         let content_text = vec![
-            Line::from("Hello World"),
+            Line::from(
+                Span::styled("Hello World", default_style_text())
+            ),
         ];
 
-        let header = Paragraph::new(header_text)
-            .block(Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
-                .padding(Padding::new(2,0,0,0)
-                )
+        let action_text = Line::from(
+            Span::styled("Press n to add new task", default_style_text())
+        );
+
+        let footer_text =  Line::from(vec![
+            Span::raw("←/→ "),
+            Span::styled("Change day", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("   n "),
+            Span::styled("New", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("   h "),
+            Span::styled("History", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("   ? "),
+            Span::styled("Help", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("   q "),
+            Span::styled("Quit", Style::default().add_modifier(Modifier::BOLD)),
+        ]);
+
+
+        let header_panel = Paragraph::new(header_text)
+            .block(
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
+                    .padding(Padding::new(2,0,0,0))
             );
 
-        let content = Paragraph::new(content_text)
-            .block(Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::TOP));
+        let content_panel = Paragraph::new(content_text)
+            .block(
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+                    .padding(Padding::new(7,0,2,0))
+            );
 
-        frame.render_widget(header, vertical_layout[0]);
+        let action_panel = Paragraph::new(action_text)
+            .block(
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            );
 
-        frame.render_widget(content, vertical_layout[1]);
+        let footer_panel = Paragraph::new(footer_text)
+            .block(
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            );
+
+
+
+        frame.render_widget(header_panel, vertical_layout[0]);
+        frame.render_widget(content_panel, vertical_layout[1]);
+        frame.render_widget(action_panel, vertical_layout[2]);
+        frame.render_widget(footer_panel, vertical_layout[3]);
+
     }
 }
 
