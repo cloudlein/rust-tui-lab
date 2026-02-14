@@ -9,7 +9,7 @@ use std::io;
 use chrono::{Duration, Local};
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Block, Borders, Padding, Paragraph};
 
 enum Page{
     Day,
@@ -38,7 +38,7 @@ impl App {
         let vertical_layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),
+                Constraint::Length(4),
                 Constraint::Min(3),
                 Constraint::Length(2),
                 Constraint::Length(2),
@@ -69,9 +69,22 @@ impl App {
             header_line,
         ];
 
-        let header = Paragraph::new(header_text);
+        let content_text = vec![
+            Line::from("Hello World"),
+        ];
+
+        let header = Paragraph::new(header_text)
+            .block(Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+                .padding(Padding::new(2,0,0,0)
+                )
+            );
+
+        let content = Paragraph::new(content_text)
+            .block(Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::TOP));
+
         frame.render_widget(header, vertical_layout[0]);
 
+        frame.render_widget(content, vertical_layout[1]);
     }
 }
 
