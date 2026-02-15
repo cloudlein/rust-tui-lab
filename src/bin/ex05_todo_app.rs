@@ -40,8 +40,8 @@ impl App {
             .constraints([
                 Constraint::Length(4),   // header
                 Constraint::Min(0),      // content
-                Constraint::Length(3),   // action
-                Constraint::Length(3),   // footer
+                Constraint::Length(2),   // action
+                Constraint::Length(2),   // footer
             ])
             .split(container);
 
@@ -71,7 +71,13 @@ impl App {
 
         let content_text = vec![
             Line::from(
-                Span::styled("Hello World", default_style_text())
+                Span::styled("▸  09:00  Design clean architecture", default_style_text())
+            ),
+            Line::from(
+                Span::styled("14:00  Fix GitHub connection", default_style_text())
+            ),
+            Line::from(
+                Span::styled("✓  18:00  Finish Rust TUI Level 4", default_style_text())
             ),
         ];
 
@@ -95,28 +101,22 @@ impl App {
 
         let header_panel = Paragraph::new(header_text)
             .block(
-                Block::default()
-                    .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
-                    .padding(Padding::new(2,0,0,0))
+                panel_block_with_padding_borders(2,0,0,0, Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
             );
 
         let content_panel = Paragraph::new(content_text)
             .block(
-                Block::default()
-                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-                    .padding(Padding::new(7,0,2,0))
+                panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
 
         let action_panel = Paragraph::new(action_text)
             .block(
-                Block::default()
-                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+                panel_block_with_padding_borders(2, 0, 0, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
 
         let footer_panel = Paragraph::new(footer_text)
             .block(
-                Block::default()
-                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+                panel_block_with_padding_borders(2, 0, 0, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
 
 
@@ -126,6 +126,72 @@ impl App {
         frame.render_widget(action_panel, vertical_layout[2]);
         frame.render_widget(footer_panel, vertical_layout[3]);
 
+    }
+
+    fn render_input_view(&self, frame: &mut Frame) {
+        let container = frame.area();
+
+        let vertical_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(4),
+                Constraint::Min(0),
+                Constraint::Length(2),
+            ])
+            .split(container);
+
+        let header_text = Line::from(
+            Span::styled(
+                "ADD NEW TASK", default_style_text()
+            )
+        );
+
+        let content_text = vec![
+            Line::from(
+                Span::styled(
+                    "Date: 2026-02-13", default_style_text()
+                )
+            ),
+            Line::from(
+                Span::styled(
+                    "Time: 14:00", default_style_text()
+                )
+            ),
+            Line::from(
+                Span::styled(
+                    "Title: build clean backend", default_style_text()
+                )
+            )
+        ];
+
+        let footer_text =  Line::from(vec![
+            Span::raw("Tab"),
+            Span::styled("Next", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("   Enter "),
+            Span::styled("Save", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("   Esc "),
+            Span::styled("Cancel", Style::default().add_modifier(Modifier::BOLD)),
+        ]);
+
+
+        let header_panel = Paragraph::new(header_text)
+            .block(
+              panel_block_with_padding_borders(2,0,0,0,Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
+            );
+
+        let content_panel = Paragraph::new(content_text)
+        .block(
+            panel_block_with_padding_borders(2,0,4,0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+        );
+
+        let footer_panel = Paragraph::new(footer_text)
+        .block(
+          panel_block_with_padding_borders(2,0,0,0,Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+        );
+
+        frame.render_widget(header_panel, vertical_layout[0]);
+        frame.render_widget(content_panel, vertical_layout[1]);
+        frame.render_widget(footer_panel, vertical_layout[2]);
     }
 }
 
@@ -147,6 +213,7 @@ fn main() -> Result<()> {
 
             match app.page {
                 Page::Day => app.render_day_view(f),
+                Page::Input => app.render_input_view(f),
                 _ => {}
             }
 
@@ -156,6 +223,7 @@ fn main() -> Result<()> {
             if key.kind == KeyEventKind::Press {
                 match key.code {
                     KeyCode::Char('q') | KeyCode::Esc => break,
+                    KeyCode::Char('n') => app.page = Page::Input,
                     _ => {}
                 }
             }
@@ -177,6 +245,13 @@ fn default_style_text() -> Style {
 fn title_text(title: &str) -> Line<'static> {
     Line::from(
         Span::styled(title.to_string(), default_style_text()
-            .add_modifier(Modifier::BOLD))
+            .add_modifier(Modifier::BOLD)
+        )
     )
+}
+
+fn panel_block_with_padding_borders(left: u16, right: u16, top: u16, bottom: u16, borders: Borders) -> Block<'static> {
+    Block::default()
+        .borders(borders)
+        .padding(Padding::new(left, right, top, bottom))
 }
