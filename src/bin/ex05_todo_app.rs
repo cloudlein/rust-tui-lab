@@ -4,7 +4,7 @@ use crossterm::event::{Event, KeyCode, KeyEventKind};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{event, execute};
 use ratatui::backend::CrosstermBackend;
-use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::layout::{Alignment, Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Padding, Paragraph};
@@ -131,68 +131,85 @@ impl App {
     fn render_input_view(&self, frame: &mut Frame) {
         let container = frame.area();
 
-        let vertical_layout = Layout::default()
+        let layout = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(4),
-                Constraint::Min(0),
-                Constraint::Length(2),
+                Constraint::Length(3),  // header
+                Constraint::Min(0),     // form
+                Constraint::Length(2),  // footer
             ])
             .split(container);
 
-        let header_text = Line::from(
-            Span::styled(
-                "ADD NEW TASK", default_style_text()
-            )
-        );
-
-        let content_text = vec![
+        let header = Paragraph::new(
             Line::from(
                 Span::styled(
-                    "Date: 2026-02-13", default_style_text()
-                )
-            ),
-            Line::from(
-                Span::styled(
-                    "Time: 14:00", default_style_text()
-                )
-            ),
-            Line::from(
-                Span::styled(
-                    "Title: build clean backend", default_style_text()
+                    "ADD NEW TASK",
+                    Style::default()
+                        .fg(Color::White)
+                        .add_modifier(Modifier::BOLD),
                 )
             )
-        ];
-
-        let footer_text =  Line::from(vec![
-            Span::raw("Tab"),
-            Span::styled("Next", Style::default().add_modifier(Modifier::BOLD)),
-            Span::raw("   Enter "),
-            Span::styled("Save", Style::default().add_modifier(Modifier::BOLD)),
-            Span::raw("   Esc "),
-            Span::styled("Cancel", Style::default().add_modifier(Modifier::BOLD)),
-        ]);
-
-
-        let header_panel = Paragraph::new(header_text)
+        )
+            .alignment(Alignment::Center)
             .block(
-              panel_block_with_padding_borders(2,0,0,0,Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
             );
 
-        let content_panel = Paragraph::new(content_text)
-        .block(
-            panel_block_with_padding_borders(2,0,4,0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-        );
+        let form_text = vec![
+            Line::from(""),
+            Line::from(Span::styled("  Date", Style::default().fg(Color::Gray))),
+            Line::from(Span::styled(
+                "  [ 2026-02-13            ]",
+                Style::default().fg(Color::White),
+            )),
+            Line::from(""),
+            Line::from(Span::styled("  Time", Style::default().fg(Color::Gray))),
+            Line::from(Span::styled(
+                "  [ 14:00                 ]",
+                Style::default().fg(Color::White),
+            )),
+            Line::from(""),
+            Line::from(Span::styled("  Title", Style::default().fg(Color::Gray))),
+            Line::from(Span::styled(
+                "  [ build clean backend   ]",
+                Style::default().fg(Color::White),
+            )),
+            Line::from(""),
+        ];
 
-        let footer_panel = Paragraph::new(footer_text)
-        .block(
-          panel_block_with_padding_borders(2,0,0,0,Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-        );
+        let form = Paragraph::new(form_text)
+            .block(
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT)
+            );
 
-        frame.render_widget(header_panel, vertical_layout[0]);
-        frame.render_widget(content_panel, vertical_layout[1]);
-        frame.render_widget(footer_panel, vertical_layout[2]);
+        let footer = Paragraph::new(
+            Line::from(vec![
+                Span::styled("  Tab", Style::default().fg(Color::Gray)),
+                Span::raw(" • "),
+                Span::styled("Next", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw("    "),
+                Span::styled("Enter", Style::default().fg(Color::Gray)),
+                Span::raw(" • "),
+                Span::styled("Save", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw("    "),
+                Span::styled("Esc", Style::default().fg(Color::Gray)),
+                Span::raw(" • "),
+                Span::styled("Cancel", Style::default().add_modifier(Modifier::BOLD)),
+            ])
+        )
+            .alignment(Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            );
+
+        frame.render_widget(header, layout[0]);
+        frame.render_widget(form, layout[1]);
+        frame.render_widget(footer, layout[2]);
     }
+
 }
 
 fn main() -> Result<()> {
