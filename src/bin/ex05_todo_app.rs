@@ -210,6 +210,36 @@ impl App {
         frame.render_widget(footer, layout[2]);
     }
 
+    fn render_history_view(&self, frame: &mut Frame) {
+        let container = frame.area();
+
+        let vertical_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![
+                Constraint::Length(3),
+                Constraint::Min(0),
+                Constraint::Length(2),
+            ])
+            .split(container);
+
+
+        let header_text = vec![
+            title_text("HISTORY"),
+            Line::from(Span::styled(
+                "Completed & past tasks", default_style_text()
+            )),
+        ];
+
+
+        let footer_text =  Line::from(vec![
+            Span::raw("Esc "),
+            Span::styled("Back to planner", Style::default().add_modifier(Modifier::BOLD)),
+        ]);
+
+
+
+    }
+
 }
 
 fn main() -> Result<()> {
@@ -231,6 +261,7 @@ fn main() -> Result<()> {
             match app.page {
                 Page::Day => app.render_day_view(f),
                 Page::Input => app.render_input_view(f),
+                Page::History => app.render_history_view(f),
                 _ => {}
             }
 
@@ -239,8 +270,10 @@ fn main() -> Result<()> {
         if let Event::Key(key) = event::read()? {
             if key.kind == KeyEventKind::Press {
                 match key.code {
-                    KeyCode::Char('q') | KeyCode::Esc => break,
+                    KeyCode::Char('q')  => break,
                     KeyCode::Char('n') => app.page = Page::Input,
+                    KeyCode::Esc => app.page = Page::Day,
+                    KeyCode::Char('h') => app.page = Page::History,
                     _ => {}
                 }
             }
