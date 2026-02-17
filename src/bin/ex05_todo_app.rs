@@ -18,6 +18,11 @@ enum Page{
     Help
 }
 
+struct Task {
+    date: String,
+    time: String,
+    text: String,
+}
 
 struct App {
     page: Page,
@@ -212,6 +217,19 @@ impl App {
 
     fn render_history_view(&self, frame: &mut Frame) {
         let container = frame.area();
+        let testing_tasks = vec![
+            Task {
+                date: "2026-02-10".to_string(),
+                time: "09:00".to_string(),
+                text: "Fix auth bug".to_string(),
+            },
+            Task {
+                date: "2026-02-11".to_string(),
+                time: "14:00".to_string(),
+                text: "Design clean architecture".to_string(),
+            },
+        ];
+
 
         let vertical_layout = Layout::default()
             .direction(Direction::Vertical)
@@ -230,14 +248,89 @@ impl App {
             )),
         ];
 
+        let content_text: Vec<Line> = testing_tasks
+            .iter()
+            .map(|t| {
+                Line::from(format!(
+                    "{} {}  {}",
+                    t.date, t.time, t.text
+                ))
+            })
+            .collect();
+
 
         let footer_text =  Line::from(vec![
             Span::raw("Esc "),
             Span::styled("Back to planner", Style::default().add_modifier(Modifier::BOLD)),
         ]);
 
+        let header_panel = Paragraph::new(header_text)
+            .block(
+                panel_block_with_padding_borders(2,0,0,0, Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
+            );
 
+        let content_panel = Paragraph::new(content_text)
+            .block(
+                panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            );
 
+        let footer_panel = Paragraph::new(footer_text)
+            .block(
+                panel_block_with_padding_borders(2, 0, 0, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            );
+
+        frame.render_widget(header_panel, vertical_layout[0]);
+        frame.render_widget(content_panel, vertical_layout[1]);
+        frame.render_widget(footer_panel, vertical_layout[2]);
+
+    }
+
+    fn render_help_view(&self, frame: &mut Frame) {
+        let container = frame.area();
+
+        let vertical_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(vec![
+            Constraint::Length(3),
+            Constraint::Min(0),
+            Constraint::Length(2),
+        ]).split(container);
+
+        let header_text = Line::from(title_text("HELP"));
+
+        let content_text: Vec<Line> = vec![
+            Line::from("←/→    Change day"),
+            Line::from("↑/↓    Move selection"),
+            Line::from("Enter  Toggle done"),
+            Line::from("n      New task"),
+            Line::from("d      Delete"),
+            Line::from("h      History"),
+            Line::from("q      Quit"),
+        ];
+
+        let footer_text =  Line::from(vec![
+            Span::raw("Esc "),
+            Span::styled("Back", Style::default().add_modifier(Modifier::BOLD)),
+        ]);
+
+        let header_panel = Paragraph::new(header_text)
+            .block(
+                panel_block_with_padding_borders(2,0,0,0, Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
+            );
+
+        let content_panel = Paragraph::new(content_text)
+            .block(
+                panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            );
+
+        let footer_panel = Paragraph::new(footer_text)
+            .block(
+                panel_block_with_padding_borders(2, 0, 0, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+            );
+
+        frame.render_widget(header_panel, vertical_layout[0]);
+        frame.render_widget(content_panel, vertical_layout[1]);
+        frame.render_widget(footer_panel, vertical_layout[2]);
     }
 
 }
@@ -262,6 +355,7 @@ fn main() -> Result<()> {
                 Page::Day => app.render_day_view(f),
                 Page::Input => app.render_input_view(f),
                 Page::History => app.render_history_view(f),
+                Page::Help => app.render_help_view(f),
                 _ => {}
             }
 
@@ -274,6 +368,7 @@ fn main() -> Result<()> {
                     KeyCode::Char('n') => app.page = Page::Input,
                     KeyCode::Esc => app.page = Page::Day,
                     KeyCode::Char('h') => app.page = Page::History,
+                    KeyCode::Char('?') => app.page = Page::Help,
                     _ => {}
                 }
             }
