@@ -7,7 +7,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Alignment, Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Padding, Paragraph};
+use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Padding, Paragraph};
 use ratatui::{Frame, Terminal};
 use std::io;
 
@@ -22,19 +22,51 @@ struct Task {
     date: String,
     time: String,
     text: String,
+    done: bool,
+}
+
+struct  InputBuffer {
+    date: String,
+    time: String,
+    text: String,
+    focus: usize,
 }
 
 struct App {
     page: Page,
     day_offset: i32,
+    tasks: Vec<Task>,
+    list_state: ListState,
+    input_buffer: InputBuffer,
 }
 
 impl App {
     fn new() -> Self {
+        let mut list_state = ListState::default();
+        list_state.select(Some(0));
         Self {
             page: Page::Day,
             day_offset: 0,
+            tasks: vec![],
+            list_state,
+            input_buffer: InputBuffer {
+                date: Local::now().format("%Y-%m-%d").to_string(),
+                time: "09:00".into(),
+                text: String::new(),
+                focus: 0,
+            }
         }
+    }
+
+    fn day_items(&self) -> Vec<ListItem<'static>> {
+        self.tasks
+            .iter()
+            .filter(|t| t.date == self.selected_day())
+            .map(|t| {
+                let prefix = if t.done {"✓"} else {" "};
+                ListItem::new(format!("{} {}", prefix, t.text))
+            })
+            .collect()
     }
 
     fn render_day_view(&self, frame: &mut Frame) {
@@ -74,17 +106,6 @@ impl App {
             header_line,
         ];
 
-        let content_text = vec![
-            Line::from(
-                Span::styled("▸  09:00  Design clean architecture", default_style_text())
-            ),
-            Line::from(
-                Span::styled("14:00  Fix GitHub connection", default_style_text())
-            ),
-            Line::from(
-                Span::styled("✓  18:00  Finish Rust TUI Level 4", default_style_text())
-            ),
-        ];
 
         let action_text = Line::from(
             Span::styled("Press n to add new task", default_style_text())
@@ -109,7 +130,7 @@ impl App {
                 panel_block_with_padding_borders(2,0,0,0, Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
             );
 
-        let content_panel = Paragraph::new(content_text)
+        let content_panel = List::new(self.day)
             .block(
                 panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
