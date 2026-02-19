@@ -1,4 +1,4 @@
-use chrono::{Duration, Local};
+use chrono::{Duration, Local, NaiveDate};
 use color_eyre::Result;
 use crossterm::event::{Event, KeyCode, KeyEventKind};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
@@ -19,14 +19,14 @@ enum Page{
 }
 
 struct Task {
-    date: String,
+    date: NaiveDate,
     time: String,
     text: String,
     done: bool,
 }
 
 struct  InputBuffer {
-    date: String,
+    date: NaiveDate,
     time: String,
     text: String,
     focus: usize,
@@ -50,11 +50,11 @@ impl App {
             tasks: vec![],
             list_state,
             input_buffer: InputBuffer {
-                date: Local::now().format("%Y-%m-%d").to_string(),
+                date: Local::now().date_naive(),
                 time: "09:00".into(),
                 text: String::new(),
                 focus: 0,
-            }
+            },
         }
     }
 
@@ -63,13 +63,18 @@ impl App {
             .iter()
             .filter(|t| t.date == self.selected_day())
             .map(|t| {
-                let prefix = if t.done {"✓"} else {" "};
+                let prefix = if t.done { "✓" } else { " " };
                 ListItem::new(format!("{} {}", prefix, t.text))
             })
             .collect()
     }
 
-    fn render_day_view(&self, frame: &mut Frame) {
+    fn selected_day(&self) -> NaiveDate {
+        Local::now().date_naive() + Duration::days(self.day_offset as i64)
+    }
+
+
+    fn render_day_view(&mut self, frame: &mut Frame) {
         let container = frame.area();
 
         let vertical_layout = Layout::default()
@@ -93,12 +98,12 @@ impl App {
         };
 
         let header_line = Line::from(vec![
-            Span::raw("◀ Yesterday   "),
+            Span::raw("◀ Previous "),
             Span::styled(
                 format!("{label} · {}   ", formatted_date),
                 Style::default().add_modifier(Modifier::BOLD),
             ),
-            Span::raw("Tomorrow ▶"),
+            Span::raw("Next ▶"),
         ]);
 
         let header_text = vec![
@@ -130,7 +135,7 @@ impl App {
                 panel_block_with_padding_borders(2,0,0,0, Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
             );
 
-        let content_panel = List::new(self.day)
+        let content_panel = List::new(self.day_items())
             .block(
                 panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
@@ -148,7 +153,7 @@ impl App {
 
 
         frame.render_widget(header_panel, vertical_layout[0]);
-        frame.render_widget(content_panel, vertical_layout[1]);
+        frame.render_stateful_widget(content_panel, vertical_layout[1],  &mut self.list_state );
         frame.render_widget(action_panel, vertical_layout[2]);
         frame.render_widget(footer_panel, vertical_layout[3]);
 
@@ -238,18 +243,6 @@ impl App {
 
     fn render_history_view(&self, frame: &mut Frame) {
         let container = frame.area();
-        let testing_tasks = vec![
-            Task {
-                date: "2026-02-10".to_string(),
-                time: "09:00".to_string(),
-                text: "Fix auth bug".to_string(),
-            },
-            Task {
-                date: "2026-02-11".to_string(),
-                time: "14:00".to_string(),
-                text: "Design clean architecture".to_string(),
-            },
-        ];
 
 
         let vertical_layout = Layout::default()
@@ -269,15 +262,6 @@ impl App {
             )),
         ];
 
-        let content_text: Vec<Line> = testing_tasks
-            .iter()
-            .map(|t| {
-                Line::from(format!(
-                    "{} {}  {}",
-                    t.date, t.time, t.text
-                ))
-            })
-            .collect();
 
 
         let footer_text =  Line::from(vec![
@@ -290,10 +274,10 @@ impl App {
                 panel_block_with_padding_borders(2,0,0,0, Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
             );
 
-        let content_panel = Paragraph::new(content_text)
-            .block(
-                panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-            );
+        // let content_panel = Paragraph::new(content_text)
+        //     .block(
+        //         panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
+        //     );
 
         let footer_panel = Paragraph::new(footer_text)
             .block(
@@ -301,7 +285,7 @@ impl App {
             );
 
         frame.render_widget(header_panel, vertical_layout[0]);
-        frame.render_widget(content_panel, vertical_layout[1]);
+        //frame.render_widget(content_panel, vertical_layout[1]);
         frame.render_widget(footer_panel, vertical_layout[2]);
 
     }
@@ -392,7 +376,19 @@ fn main() -> Result<()> {
                     KeyCode::Char('?') => app.page = Page::Help,
                     _ => {}
                 }
+
+                match app.page {
+                    Page::Day => {
+                        match key.code {
+                            KeyCode::Left => app.day_offset -= 1,
+                            KeyCode::Right => app.day_offset += 1,
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
             }
+
         }
     }
 
