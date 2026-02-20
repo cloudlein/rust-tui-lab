@@ -175,18 +175,52 @@ impl App {
 
         self.render_day_view(frame, true);
 
-        let popup_area = centered_react(60,25, frame.area());
+        let popup_area = centered_react(80,45, frame.area());
 
         frame.render_widget(Clear, popup_area);
 
-        let block = Block::default()
-            .title("Input")
-            .borders(Borders::ALL);
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(4),  // Header "NEW TASK"
+                Constraint::Min(0),     // Form Fields
+                Constraint::Length(3),  // Action Buttons
+            ])
+            .margin(1) // Margin dalam popup
+            .split(popup_area);
 
-        let paragraph = Paragraph::new("testing")
-            .block(block);
+        let popup_block = Block::default()
+            .borders(Borders::ALL)
+            .style(Style::default().bg(Color::Black));
 
-        frame.render_widget(paragraph, popup_area);
+
+        frame.render_widget(popup_block, popup_area);
+
+        let header_text = vec![
+            Line::from(""),
+            title_text("NEW TASKS PLANNER", false),
+            Line::from(""),
+            Line::from(
+                Span::styled(
+                    "Enter task details below", default_style_text(false),
+                )
+            )
+        ];
+
+        let header_panel_form = Paragraph::new(header_text)
+            .style(default_style_text(false))
+            .alignment(Alignment::Center);
+
+        frame.render_widget(header_panel_form, layout[0]);
+
+        let form_layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(3),
+                Constraint::Length(3)
+            ]);
+
+
     }
 
     fn render_history_view(&self, frame: &mut Frame, dim: bool) {
