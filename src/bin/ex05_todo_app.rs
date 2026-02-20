@@ -4,10 +4,10 @@ use crossterm::event::{Event, KeyCode, KeyEventKind};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::{event, execute};
 use ratatui::backend::CrosstermBackend;
-use ratatui::layout::{Alignment, Constraint, Direction, Layout};
+use ratatui::layout::{Alignment, Constraint, Direction, Flex, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Padding, Paragraph};
+use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Padding, Paragraph};
 use ratatui::{Frame, Terminal};
 use std::io;
 
@@ -74,8 +74,14 @@ impl App {
     }
 
 
-    fn render_day_view(&mut self, frame: &mut Frame) {
+    fn render_day_view(&mut self, frame: &mut Frame, dim: bool) {
         let container = frame.area();
+
+        let style = if dim {
+            Style::default().fg(Color::DarkGray)
+        }else {
+            Style::default()
+        };
 
         let vertical_layout = Layout::default()
             .direction(Direction::Vertical)
@@ -107,13 +113,13 @@ impl App {
         ]);
 
         let header_text = vec![
-            title_text("TASK PLANNER"),
+            title_text("TASK PLANNER", dim),
             header_line,
         ];
 
 
         let action_text = Line::from(
-            Span::styled("Press n to add new task", default_style_text())
+            Span::styled("Press n to add new task", default_style_text(dim))
         );
 
         let footer_text =  Line::from(vec![
@@ -131,21 +137,25 @@ impl App {
 
 
         let header_panel = Paragraph::new(header_text)
+            .style(style)
             .block(
                 panel_block_with_padding_borders(2,0,0,0, Borders::LEFT | Borders::RIGHT | Borders::TOP | Borders::BOTTOM)
             );
 
         let content_panel = List::new(self.day_items())
+            .style(style)
             .block(
                 panel_block_with_padding_borders(7, 0, 2, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
 
         let action_panel = Paragraph::new(action_text)
+            .style(style)
             .block(
                 panel_block_with_padding_borders(2, 0, 0, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
 
         let footer_panel = Paragraph::new(footer_text)
+            .style(style)
             .block(
                 panel_block_with_padding_borders(2, 0, 0, 0, Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
             );
@@ -159,89 +169,27 @@ impl App {
 
     }
 
-    fn render_input_view(&self, frame: &mut Frame) {
-        let container = frame.area();
 
-        let layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Length(3),  // header
-                Constraint::Min(0),     // form
-                Constraint::Length(2),  // footer
-            ])
-            .split(container);
 
-        let header = Paragraph::new(
-            Line::from(
-                Span::styled(
-                    "ADD NEW TASK",
-                    Style::default()
-                        .fg(Color::White)
-                        .add_modifier(Modifier::BOLD),
-                )
-            )
-        )
-            .alignment(Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
-            );
+    fn render_input_view(&mut self, frame: &mut Frame) {
 
-        let form_text = vec![
-            Line::from(""),
-            Line::from(Span::styled("  Date", Style::default().fg(Color::Gray))),
-            Line::from(Span::styled(
-                "  [ 2026-02-13            ]",
-                Style::default().fg(Color::White),
-            )),
-            Line::from(""),
-            Line::from(Span::styled("  Time", Style::default().fg(Color::Gray))),
-            Line::from(Span::styled(
-                "  [ 14:00                 ]",
-                Style::default().fg(Color::White),
-            )),
-            Line::from(""),
-            Line::from(Span::styled("  Title", Style::default().fg(Color::Gray))),
-            Line::from(Span::styled(
-                "  [ build clean backend   ]",
-                Style::default().fg(Color::White),
-            )),
-            Line::from(""),
-        ];
+        self.render_day_view(frame, true);
 
-        let form = Paragraph::new(form_text)
-            .block(
-                Block::default()
-                    .borders(Borders::LEFT | Borders::RIGHT)
-            );
+        let popup_area = centered_react(60,25, frame.area());
 
-        let footer = Paragraph::new(
-            Line::from(vec![
-                Span::styled("  Tab", Style::default().fg(Color::Gray)),
-                Span::raw(" • "),
-                Span::styled("Next", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw("    "),
-                Span::styled("Enter", Style::default().fg(Color::Gray)),
-                Span::raw(" • "),
-                Span::styled("Save", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw("    "),
-                Span::styled("Esc", Style::default().fg(Color::Gray)),
-                Span::raw(" • "),
-                Span::styled("Cancel", Style::default().add_modifier(Modifier::BOLD)),
-            ])
-        )
-            .alignment(Alignment::Center)
-            .block(
-                Block::default()
-                    .borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM)
-            );
+        frame.render_widget(Clear, popup_area);
 
-        frame.render_widget(header, layout[0]);
-        frame.render_widget(form, layout[1]);
-        frame.render_widget(footer, layout[2]);
+        let block = Block::default()
+            .title("Input")
+            .borders(Borders::ALL);
+
+        let paragraph = Paragraph::new("testing")
+            .block(block);
+
+        frame.render_widget(paragraph, popup_area);
     }
 
-    fn render_history_view(&self, frame: &mut Frame) {
+    fn render_history_view(&self, frame: &mut Frame, dim: bool) {
         let container = frame.area();
 
 
@@ -256,9 +204,9 @@ impl App {
 
 
         let header_text = vec![
-            title_text("HISTORY"),
+            title_text("HISTORY", dim),
             Line::from(Span::styled(
-                "Completed & past tasks", default_style_text()
+                "Completed & past tasks", default_style_text(dim)
             )),
         ];
 
@@ -290,7 +238,7 @@ impl App {
 
     }
 
-    fn render_help_view(&self, frame: &mut Frame) {
+    fn render_help_view(&self, frame: &mut Frame, dim: bool) {
         let container = frame.area();
 
         let vertical_layout = Layout::default()
@@ -301,7 +249,7 @@ impl App {
             Constraint::Length(2),
         ]).split(container);
 
-        let header_text = Line::from(title_text("HELP"));
+        let header_text = Line::from(title_text("HELP", dim));
 
         let content_text: Vec<Line> = vec![
             Line::from("←/→    Change day"),
@@ -357,10 +305,10 @@ fn main() -> Result<()> {
         terminal.draw(|f| {
 
             match app.page {
-                Page::Day => app.render_day_view(f),
+                Page::Day => app.render_day_view(f, false),
                 Page::Input => app.render_input_view(f),
-                Page::History => app.render_history_view(f),
-                Page::Help => app.render_help_view(f),
+                Page::History => app.render_history_view(f, false),
+                Page::Help => app.render_help_view(f, false),
                 _ => {}
             }
 
@@ -400,13 +348,17 @@ fn main() -> Result<()> {
 
 }
 
-fn default_style_text() -> Style {
-    Style::default().fg(Color::White)
+fn default_style_text(dim: bool) -> Style {
+    if dim {
+        Style::default().fg(Color::DarkGray)
+    }else {
+        Style::default().fg(Color::White)
+    }
 }
 
-fn title_text(title: &str) -> Line<'static> {
+fn title_text(title: &str, dim: bool) -> Line<'static> {
     Line::from(
-        Span::styled(title.to_string(), default_style_text()
+        Span::styled(title.to_string(), default_style_text(dim)
             .add_modifier(Modifier::BOLD)
         )
     )
@@ -416,4 +368,19 @@ fn panel_block_with_padding_borders(left: u16, right: u16, top: u16, bottom: u16
     Block::default()
         .borders(borders)
         .padding(Padding::new(left, right, top, bottom))
+}
+
+fn centered_react(percent_x: u16, percent_y: u16, r: Rect) -> Rect  {
+    let vertical_popup = Layout::vertical(
+        [Constraint::Percentage(percent_x)])
+        .flex(Flex::Center);
+
+    let horizontal_popup = Layout::horizontal(
+        [Constraint::Percentage(percent_y)])
+        .flex(Flex::Center);
+
+    let [r] = vertical_popup.areas(r);
+    let [r] = horizontal_popup.areas(r);
+
+    r
 }
