@@ -24,18 +24,33 @@ practice.
     │  ←/→ Change day   n New   h History   ? Help   q Quit         │
     └──────────────────────────────────────────────────────────────┘
 
-### 2. Input View
+### 2. Input Popup (Overlay)
+
+When menekan `n` di Day View, form input muncul sebagai popup di tengah
+layar, menimpa Day View (background bisa dianggap sedikit "dim" atau
+abaikan saja saat implementasi awal).
 
     ┌──────────────────────────────────────────────────────────────┐
-    │  ADD NEW TASK                                                │
+    │  TASK PLANNER                                                │
+    │  ◀ Yesterday   Today · 2026-02-12   Tomorrow ▶               │
     ├──────────────────────────────────────────────────────────────┤
     │                                                              │
-    │  Date: 2026-02-13                                             │
-    │  Time: 14:00                                                 │
-    │  Title: build clean backend                                  │
+    │   ▸  09:00  Design clean architecture                        │
+    │      14:00  Fix GitHub connection                            │
+    │   ✓  18:00  Finish Rust TUI Level 4                          │
+    │                                                              │
+    │      ┌──────────────────────────────────────────────┐        │
+    │      │  ADD NEW TASK                                │        │
+    │      ├──────────────────────────────────────────────┤        │
+    │      │ Date: 2026-02-13                            │        │
+    │      │ Time: 14:00                                  │        │
+    │      │ Title: build clean backend                   │        │
+    │      ├──────────────────────────────────────────────┤        │
+    │      │ Tab Next   Enter Save   Esc Cancel           │        │
+    │      └──────────────────────────────────────────────┘        │
     │                                                              │
     ├──────────────────────────────────────────────────────────────┤
-    │  Tab Next   Enter Save   Esc Cancel                           │
+    │  ←/→ Change day   n New   h History   ? Help   q Quit         │
     └──────────────────────────────────────────────────────────────┘
 
 ### 3. History View
@@ -76,7 +91,7 @@ practice.
 
 ## Navigation Flow
 
-Day View -\> Input (n) -\> Save -\> Day View\
+Day View -> Input Popup (n) -> Save/Esc -> Day View\
 Day View -\> History (h) -\> Esc -\> Day View
 
 ## Goal
